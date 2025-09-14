@@ -1,3 +1,4 @@
 # Teleport-to-player-roblox
 Teleport to player gui roblox
-there will be no updates, only bug fixes
+# CHANGELOG
+# 14.09.25 GLOBAL UPDATE: NEW GUI,new script logic, bug fixes for old version
