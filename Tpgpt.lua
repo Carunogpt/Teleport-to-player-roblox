@@ -1,7 +1,7 @@
 local player = game.Players.LocalPlayer
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "PlayerTeleportGUI"
-screenGui.Parent = player.PlayerGui
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 
 local COLORS = {
@@ -15,6 +15,11 @@ local COLORS = {
 }
 
 
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "PlayerTeleportGUI"
+screenGui.Parent = player.PlayerGui
+screenGui.ResetOnSpawn = false
+
 local frame = Instance.new("Frame")
 frame.Name = "MainFrame"
 frame.Size = UDim2.new(0, 320, 0, 200)
@@ -23,11 +28,9 @@ frame.BackgroundColor3 = COLORS.BACKGROUND
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
-
 local frameCorner = Instance.new("UICorner")
 frameCorner.CornerRadius = UDim.new(0, 12)
 frameCorner.Parent = frame
-
 
 local frameGradient = Instance.new("UIGradient")
 frameGradient.Color = ColorSequence.new{
@@ -36,7 +39,6 @@ frameGradient.Color = ColorSequence.new{
 }
 frameGradient.Rotation = 45
 frameGradient.Parent = frame
-
 
 local frameStroke = Instance.new("UIStroke")
 frameStroke.Color = Color3.new(0.4, 0.4, 0.4)
@@ -56,11 +58,9 @@ titleLabel.TextScaled = true
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.Parent = frame
 
-
 local titleCorner = Instance.new("UICorner")
 titleCorner.CornerRadius = UDim.new(0, 8)
 titleCorner.Parent = titleLabel
-
 
 local titleGradient = Instance.new("UIGradient")
 titleGradient.Color = ColorSequence.new{
@@ -148,7 +148,6 @@ listStroke.Color = COLORS.ACCENT
 listStroke.Thickness = 1
 listStroke.Parent = playerList
 
-
 local playerListLayout = Instance.new("UIListLayout")
 playerListLayout.SortOrder = Enum.SortOrder.Name
 playerListLayout.Padding = UDim.new(0, 2)
@@ -168,7 +167,6 @@ buttonLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 buttonLayout.Padding = UDim.new(0, 10)
 buttonLayout.Parent = buttonContainer
 
-
 local followButton = Instance.new("TextButton")
 followButton.Name = "FollowButton"
 followButton.Size = UDim2.new(0, 140, 0, 40)
@@ -183,7 +181,6 @@ followButton.Parent = buttonContainer
 local followCorner = Instance.new("UICorner")
 followCorner.CornerRadius = UDim.new(0, 6)
 followCorner.Parent = followButton
-
 
 local teleportButton = Instance.new("TextButton")
 teleportButton.Name = "TeleportButton"
@@ -210,11 +207,9 @@ confirmDialog.BorderSizePixel = 0
 confirmDialog.Visible = false
 confirmDialog.Parent = screenGui
 
-
 local confirmCorner = Instance.new("UICorner")
 confirmCorner.CornerRadius = UDim.new(0, 12)
 confirmCorner.Parent = confirmDialog
-
 
 local confirmGradient = Instance.new("UIGradient")
 confirmGradient.Color = ColorSequence.new{
@@ -224,12 +219,10 @@ confirmGradient.Color = ColorSequence.new{
 confirmGradient.Rotation = 45
 confirmGradient.Parent = confirmDialog
 
-
 local confirmStroke = Instance.new("UIStroke")
 confirmStroke.Color = Color3.new(0.6, 0.3, 0.3)
 confirmStroke.Thickness = 2
 confirmStroke.Parent = confirmDialog
-
 
 local confirmTitle = Instance.new("TextLabel")
 confirmTitle.Name = "ConfirmTitle"
@@ -242,7 +235,6 @@ confirmTitle.TextScaled = true
 confirmTitle.Font = Enum.Font.GothamBold
 confirmTitle.Parent = confirmDialog
 
-
 local confirmQuestion = Instance.new("TextLabel")
 confirmQuestion.Name = "ConfirmQuestion"
 confirmQuestion.Size = UDim2.new(1, -20, 0, 40)
@@ -254,7 +246,6 @@ confirmQuestion.TextScaled = true
 confirmQuestion.Font = Enum.Font.Gotham
 confirmQuestion.Parent = confirmDialog
 
-
 local confirmButtonContainer = Instance.new("Frame")
 confirmButtonContainer.Name = "ConfirmButtonContainer"
 confirmButtonContainer.Size = UDim2.new(1, -20, 0, 40)
@@ -262,13 +253,11 @@ confirmButtonContainer.Position = UDim2.new(0, 10, 1, -50)
 confirmButtonContainer.BackgroundTransparency = 1
 confirmButtonContainer.Parent = confirmDialog
 
-
 local confirmButtonLayout = Instance.new("UIListLayout")
 confirmButtonLayout.FillDirection = Enum.FillDirection.Horizontal
 confirmButtonLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 confirmButtonLayout.Padding = UDim.new(0, 20)
 confirmButtonLayout.Parent = confirmButtonContainer
-
 
 local yesButton = Instance.new("TextButton")
 yesButton.Name = "YesButton"
@@ -284,7 +273,6 @@ yesButton.Parent = confirmButtonContainer
 local yesCorner = Instance.new("UICorner")
 yesCorner.CornerRadius = UDim.new(0, 6)
 yesCorner.Parent = yesButton
-
 
 local noButton = Instance.new("TextButton")
 noButton.Name = "NoButton"
@@ -305,15 +293,15 @@ noCorner.Parent = noButton
 local following = false
 local targetPlayer = nil
 local followConnection = nil
+local deathConnection = nil
 
 
 local function animateButton(button, hoverColor, originalColor)
-    local tweenService = game:GetService("TweenService")
-    local hoverTween = tweenService:Create(button, 
+    local hoverTween = TweenService:Create(button, 
         TweenInfo.new(0.2, Enum.EasingStyle.Quad), 
         {BackgroundColor3 = hoverColor}
     )
-    local leaveTween = tweenService:Create(button, 
+    local leaveTween = TweenService:Create(button, 
         TweenInfo.new(0.2, Enum.EasingStyle.Quad), 
         {BackgroundColor3 = originalColor}
     )
@@ -327,13 +315,46 @@ local function animateButton(button, hoverColor, originalColor)
     end)
 end
 
-
 animateButton(closeButton, Color3.new(1, 0.2, 0.2), COLORS.DANGER)
 animateButton(followButton, Color3.new(0.3, 0.9, 0.5), COLORS.SUCCESS)
 animateButton(teleportButton, Color3.new(0.4, 0.8, 1), COLORS.ACCENT)
 animateButton(dropdownButton, Color3.new(0.8, 0.8, 0.8), Color3.new(0.9, 0.9, 0.9))
 animateButton(yesButton, Color3.new(1, 0.2, 0.2), COLORS.DANGER)
 animateButton(noButton, Color3.new(0.3, 0.3, 0.3), COLORS.SECONDARY)
+
+
+local function stopFollowing()
+    following = false
+    if followConnection then
+        followConnection:Disconnect()
+        followConnection = nil
+    end
+    if deathConnection then
+        deathConnection:Disconnect()
+        deathConnection = nil
+    end
+    followButton.Text = "🔗 Прилипание"
+    followButton.BackgroundColor3 = COLORS.SUCCESS
+end
+
+local function onPlayerDeath()
+    print("Игрок умер - отключаем прилипание")
+    stopFollowing()
+end
+
+local function onCharacterAdded(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    if deathConnection then
+        deathConnection:Disconnect()
+    end
+    deathConnection = humanoid.Died:Connect(onPlayerDeath)
+end
+
+
+player.CharacterAdded:Connect(onCharacterAdded)
+if player.Character then
+    onCharacterAdded(player.Character)
+end
 
 
 local function createPlayerButton(playerName)
@@ -352,23 +373,21 @@ local function createPlayerButton(playerName)
     buttonCorner.CornerRadius = UDim.new(0, 4)
     buttonCorner.Parent = button
     
-    
     animateButton(button, Color3.new(0.3, 0.3, 0.3), COLORS.SECONDARY)
     
     button.MouseButton1Click:Connect(function()
-        local player = game.Players:FindFirstChild(playerName)
-        if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
+        local playerObj = game.Players:FindFirstChild(playerName)
+        if playerObj and playerObj.Character and playerObj.Character:FindFirstChild("HumanoidRootPart") then
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                player.Character.HumanoidRootPart.CFrame = playerObj.Character.HumanoidRootPart.CFrame
             end
         end
-        targetPlayer = player
+        targetPlayer = playerObj
         dropdownButton.Text = "🎯 " .. playerName
         playerList.Visible = false
         
         
-        local tweenService = game:GetService("TweenService")
-        local hideTween = tweenService:Create(playerList, 
+        local hideTween = TweenService:Create(playerList, 
             TweenInfo.new(0.3, Enum.EasingStyle.Quad), 
             {Size = UDim2.new(0, 300, 0, 0)}
         )
@@ -376,14 +395,14 @@ local function createPlayerButton(playerName)
     end)
 end
 
-
 local function updatePlayerList()
-   
+
     for _, child in pairs(playerList:GetChildren()) do
         if child:IsA("TextButton") then
             child:Destroy()
         end
     end
+    
     
     local playerCount = 0
     for _, otherPlayer in pairs(game.Players:GetPlayers()) do
@@ -402,18 +421,15 @@ local function showConfirmDialog()
     confirmDialog.Visible = true
     confirmDialog.Size = UDim2.new(0, 0, 0, 0)
     
-    local tweenService = game:GetService("TweenService")
-    local showTween = tweenService:Create(confirmDialog, 
+    local showTween = TweenService:Create(confirmDialog, 
         TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), 
         {Size = UDim2.new(0, 300, 0, 150)}
     )
     showTween:Play()
 end
 
-
 local function hideConfirmDialog()
-    local tweenService = game:GetService("TweenService")
-    local hideTween = tweenService:Create(confirmDialog, 
+    local hideTween = TweenService:Create(confirmDialog, 
         TweenInfo.new(0.3, Enum.EasingStyle.Quad), 
         {Size = UDim2.new(0, 0, 0, 0)}
     )
@@ -423,15 +439,10 @@ local function hideConfirmDialog()
     end)
 end
 
-
 updatePlayerList()
-
-
 game.Players.PlayerAdded:Connect(updatePlayerList)
 game.Players.PlayerRemoving:Connect(updatePlayerList)
 
-
-local RunService = game:GetService("RunService")
 
 followButton.MouseButton1Click:Connect(function()
     following = not following
@@ -447,17 +458,17 @@ followButton.MouseButton1Click:Connect(function()
                 end
             end
         end)
-    else
-        followButton.Text = "🔗 Прилипание"
-        followButton.BackgroundColor3 = COLORS.SUCCESS
         
-        if followConnection then
-            followConnection:Disconnect()
-            followConnection = nil
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            if deathConnection then
+                deathConnection:Disconnect()
+            end
+            deathConnection = player.Character.Humanoid.Died:Connect(onPlayerDeath)
         end
+    else
+        stopFollowing()
     end
 end)
-
 
 teleportButton.MouseButton1Click:Connect(function()
     if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -467,12 +478,9 @@ teleportButton.MouseButton1Click:Connect(function()
     end
 end)
 
-
 dropdownButton.MouseButton1Click:Connect(function()
-    local tweenService = game:GetService("TweenService")
-    
     if playerList.Visible then
-        local hideTween = tweenService:Create(playerList, 
+        local hideTween = TweenService:Create(playerList, 
             TweenInfo.new(0.3, Enum.EasingStyle.Quad), 
             {Size = UDim2.new(0, 300, 0, 0)}
         )
@@ -483,7 +491,7 @@ dropdownButton.MouseButton1Click:Connect(function()
     else
         playerList.Visible = true
         playerList.Size = UDim2.new(0, 300, 0, 0)
-        local showTween = tweenService:Create(playerList, 
+        local showTween = TweenService:Create(playerList, 
             TweenInfo.new(0.3, Enum.EasingStyle.Quad), 
             {Size = UDim2.new(0, 300, 0, 200)}
         )
@@ -491,18 +499,11 @@ dropdownButton.MouseButton1Click:Connect(function()
     end
 end)
 
-
 yesButton.MouseButton1Click:Connect(function()
     hideConfirmDialog()
+    stopFollowing()
     
-    
-    if followConnection then
-        followConnection:Disconnect()
-    end
-    
-    
-    local tweenService = game:GetService("TweenService")
-    local closeTween = tweenService:Create(frame, 
+    local closeTween = TweenService:Create(frame, 
         TweenInfo.new(0.3, Enum.EasingStyle.Quad), 
         {Size = UDim2.new(0, 0, 0, 0)}
     )
@@ -512,23 +513,18 @@ yesButton.MouseButton1Click:Connect(function()
     end)
 end)
 
-
 noButton.MouseButton1Click:Connect(function()
     hideConfirmDialog()
 end)
-
 
 closeButton.MouseButton1Click:Connect(function()
     showConfirmDialog()
 end)
 
-
 hideButton.MouseButton1Click:Connect(function()
-    local tweenService = game:GetService("TweenService")
-    
     if frame.Visible then
         hideButton.Text = "👁‍🗨"
-        local hideTween = tweenService:Create(frame, 
+        local hideTween = TweenService:Create(frame, 
             TweenInfo.new(0.3, Enum.EasingStyle.Quad), 
             {Position = UDim2.new(0.5, -160, 0, -250)}
         )
@@ -540,16 +536,14 @@ hideButton.MouseButton1Click:Connect(function()
         frame.Visible = true
         hideButton.Text = "👁"
         frame.Position = UDim2.new(0.5, -160, 0, -250)
-        local showTween = tweenService:Create(frame, 
+        local showTween = TweenService:Create(frame, 
             TweenInfo.new(0.3, Enum.EasingStyle.Quad), 
             {Position = UDim2.new(0.5, -160, 0.5, -100)}
         )
         showTween:Play()
     end
-end)
-
-
-local UserInputService = game:GetService("UserInputService")
+end
+    
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         if playerList.Visible then
@@ -561,8 +555,7 @@ UserInputService.InputBegan:Connect(function(input)
             if mousePos.X < listPos.X or mousePos.X > listPos.X + listSize.X or
                mousePos.Y < listPos.Y or mousePos.Y > listPos.Y + listSize.Y then
                 playerList.Visible = false
-                local tweenService = game:GetService("TweenService")
-                local hideTween = tweenService:Create(playerList, 
+                local hideTween = TweenService:Create(playerList, 
                     TweenInfo.new(0.3, Enum.EasingStyle.Quad), 
                     {Size = UDim2.new(0, 300, 0, 0)}
                 )
