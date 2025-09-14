@@ -126,7 +126,7 @@ local dropdownCorner = Instance.new("UICorner")
 dropdownCorner.CornerRadius = UDim.new(0, 6)
 dropdownCorner.Parent = dropdownButton
 
-
+-- СПИСОК ИГРОКОВ
 local playerList = Instance.new("ScrollingFrame")
 playerList.Name = "PlayerList"
 playerList.Size = UDim2.new(0, 300, 0, 0)
@@ -315,6 +315,7 @@ local function animateButton(button, hoverColor, originalColor)
     end)
 end
 
+
 animateButton(closeButton, Color3.new(1, 0.2, 0.2), COLORS.DANGER)
 animateButton(followButton, Color3.new(0.3, 0.9, 0.5), COLORS.SUCCESS)
 animateButton(teleportButton, Color3.new(0.4, 0.8, 1), COLORS.ACCENT)
@@ -396,7 +397,7 @@ local function createPlayerButton(playerName)
 end
 
 local function updatePlayerList()
-
+    
     for _, child in pairs(playerList:GetChildren()) do
         if child:IsA("TextButton") then
             child:Destroy()
@@ -438,6 +439,7 @@ local function hideConfirmDialog()
         confirmDialog.Visible = false
     end)
 end
+
 
 updatePlayerList()
 game.Players.PlayerAdded:Connect(updatePlayerList)
@@ -542,8 +544,9 @@ hideButton.MouseButton1Click:Connect(function()
         )
         showTween:Play()
     end
-end
-    
+end)
+
+
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         if playerList.Visible then
